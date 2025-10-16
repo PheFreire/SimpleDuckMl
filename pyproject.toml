@@ -1,0 +1,38 @@
+[project]
+name = "mlimage"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Pato",email = "pheprogrammer@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+
+[tool.poetry.dependencies]
+duckdi = ">=0.1.1,<0.2.0"
+toml = ">=0.10.2,<0.11.0"
+pydantic = ">=2.11.4,<3.0.0"
+numpy = ">=2.2.5,<3.0.0"
+graphviz = ">=0.20.3,<0.21.0"
+opencv-python = ">=4.11.0.86,<5.0.0.0"
+tqdm = "^4.67.1"
+
+[tool.poetry.group.dev.dependencies]
+isort = ">=6.0.1,<7.0.0"
+black = ">=25.1.0,<26.0.0"
+mypy = ">=1.15.0,<2.0.0"
+bandit = ">=1.8.3,<2.0.0"
+flake8 = ">=7.2.0,<8.0.0"
+autopep8 = ">=2.3.2,<3.0.0"
+pytest = ">=8.3.5,<9.0.0"
+
+[tool.poetry]
+packages = [
+  {include = "framework", from = "src"},
+  {include = "modules", from = "src"},
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

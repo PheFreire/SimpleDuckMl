@@ -1,0 +1,56 @@
+[model]
+name = ""
+plugged_dataset = "default" # Dataset used for training
+plugged_layers = ["layer_name", "layer_name2", "layer_name3"] # Layers used in the model
+plugged_training = "training_name" # Training configuration used
+plugged_output = "output_name" # Output configuration (model's final output)
+
+[datasets]
+
+[datasets.default]
+address = "/Users/phepato/Documents/dev/Lemon/ConvolutionalDuckMl/dataset" # Path to the dataset
+samples = [   
+  # { "name" = "car.bin", "quantity" = "*" },
+  # { "name" = "crab.bin", "quantity" = "*" },
+  { "name" = "duck.bin", "quantity" = "*" },
+  # { "name" = "ice_cream.bin", "quantity" = "*" },
+  { "name" = "sock.bin", "quantity" = "*" } 
+] # List of samples in the dataset
+
+[layers]
+
+[layers.layer_name]
+propagation_type = "convolutional" # "convolutional" | "dense"
+nodes = 4 # Number of perceptrons working on this layer
+activation = "relu" # Activation function
+convolutional_parameters = { in_channels = 3, kernel = [3, 3], stride = 1, padding = 0 }
+
+[layers.layer_name2]
+propagation_type = "convolutional" # "convolutional" | "dense"
+nodes = 4 # Number of perceptrons working on this layer
+activation = "relu" # Activation function
+convolutional_parameters = { in_channels = 3, kernel = [3, 3], stride = 1, padding = 0 }
+
+[layers.layer_name3]
+propagation_type = "convolutional" # "convolutional" | "dense"
+nodes = 4 # Number of perceptrons working on this layer
+activation = "relu" # Activation function
+convolutional_parameters = { in_channels = 3, kernel = [3, 3], stride = 1, padding = 0 }
+
+[trainings]
+
+[trainings.training_name] 
+gradient_descendent = "batch" # Gradient descent type (batch, stochastic, or mini_batch)
+learning_rate = 0.001 # Learning rate
+batch_size = 100 # Number of samples per batch
+num_epochs = 100 # Total number of epochs
+
+
+[outputs]
+
+[outputs.output_name]
+path = "/home/dev/outputs/output_name.h5" # Path where the output is saved
+num_epoch_to_checkpoint = 20 # Save checkpoint every 20 epochs
+checkpoint = true # Whether to save the checkpoint for each 20 epochs or only when finish the training
+read_output_as_starter_checkpoint = true # Read the output as a starting checkpoint for further training
+
