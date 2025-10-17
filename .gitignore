@@ -164,3 +164,4 @@ pyrightconfig.json
 .envrc
 
 # Project ignores
+.DS_Store
