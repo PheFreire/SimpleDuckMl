@@ -4,6 +4,8 @@ from activations.i_activation import IActivation
 
 
 class SoftmaxActivation(IActivation):
+    name = "softmax"
+
     def __call__(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
         x_shifted = x - np.max(x, axis=0, keepdims=True)
         exp_x = np.exp(x_shifted)

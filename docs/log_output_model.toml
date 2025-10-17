@@ -1,8 +1,0 @@
-[log]
-last_training_plugged_dataset = "last_dataset_name"
-last_training_plugged_layers = ["last_layer_name"]
-last_training_plugged_training = "last_training_name"
-last_training_start_time = "timedate"
-last_training_finish_time = "timedate"
-last_training_status = "completed" # Status of the last training (completed, failed, in_progress)
-last_output_path = "last_output_path"

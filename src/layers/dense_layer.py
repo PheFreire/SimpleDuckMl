@@ -2,11 +2,18 @@ from numpy.typing import NDArray
 from activations.i_activation import IActivation
 from activations.softmax_activation import SoftmaxActivation
 from layers.i_layer import ILayer
-from typing import Optional
+from typing import Dict, Optional, Self, Type
 import numpy as np
 
+from serializers.tensor_io import load_tensor, write_tensor
+from serializers.toml_io import load_toml, write_toml
+from duckdi import Get
+import uuid
+import os
 
 class DenseLayer(ILayer):
+    name = "dense"
+
     def __init__(self, output_size: int, activation: IActivation) -> None:
         self.output_size = output_size
         self.activation = activation
@@ -36,7 +43,7 @@ class DenseLayer(ILayer):
         if x.ndim == 1:
             x = x.reshape(-1, 1)
 
-        if self.w is None or self.b is None:
+        if self.w is None or self.b is None or self._grad_w is None or self._grad_b is None:
             self._init_params(x.shape[0])
 
         if self.w is None:
@@ -46,9 +53,8 @@ class DenseLayer(ILayer):
         
         self._x = x
         self._z = z
-        self._output = self.activation(z)
 
-        print(f"[Dense] z.mean={z.mean():.4f}, z.std={z.std():.4f}, out.mean={self._output.mean():.4f}")
+        self._output = self.activation(z)
         return self._output
 
 
@@ -57,7 +63,7 @@ class DenseLayer(ILayer):
             raise RuntimeError("Forward should be called before Backward")
 
         if self.w is None:
-          raise RuntimeError("Error: Could Not Initialize Dense Layer Weights") 
+          raise RuntimeError("Error: Could Not Initialize Dense Layer Weights")
 
         # Ensure (classes, batch) shape
         delta = delta.reshape(self.output_size, -1)
@@ -96,3 +102,60 @@ class DenseLayer(ILayer):
         if self._grad_b is not None:
            self._grad_b = np.zeros_like(self.b)
 
+    def save(self, name: Optional[str] = None, path: str = ".", overwrite: bool=True) -> str:
+        if self.w is None or self.b is None:
+            raise RuntimeError("Error: Could Not Instance Dense Layer Weights/Bias") 
+
+        name = str(uuid.uuid4()).replace("-", "") if name is None else name
+        os.mkdir(os.path.join(path, name))
+        file_path = os.path.join(path, name, name)
+
+        tensors_path = write_tensor(
+            tensors={ "w": self.w, "b": self.b },
+            path=file_path,
+            overwrite=overwrite
+        )
+
+        return write_toml(
+            obj={
+                "output_size": self.output_size,
+                "input_size": self.input_size,
+                "activation": self.activation.name,
+                "layer_type": self.name,
+                "tensors_path": tensors_path,
+            },
+            path=file_path,
+            overwrite=overwrite,
+        )
+    
+    @classmethod
+    def load(cls, path: str) -> Self:
+        layer_info = load_toml(path, find_on_path=True)
+
+        def __process_keys[T](obj: Dict, key: str, expected_type: Type[T]) -> T:
+            data = obj.get(key, None)
+            if data is None or not isinstance(data, expected_type):
+                raise KeyError(f"Error: Could Not Process \"{key}\" key!")
+
+            return data
+        
+        output_size = __process_keys(layer_info, "output_size", int)
+        activation = Get(
+            IActivation,
+            label='activation',
+            adapter=__process_keys(layer_info, "activation", str),
+        )
+        input_size = __process_keys(layer_info, "input_size", int)
+        tensors_path = __process_keys(layer_info, "tensors_path", str)
+
+        tensor_info = load_tensor(tensors_path, find_on_path=True)
+        w = __process_keys(tensor_info, "w", np.ndarray)
+        b = __process_keys(tensor_info, "b", np.ndarray)
+        
+        layer = cls(output_size, activation)
+        
+        layer._init_params(input_size)
+        layer.w = w
+        layer.b = b
+
+        return layer

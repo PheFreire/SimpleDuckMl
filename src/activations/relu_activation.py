@@ -3,6 +3,8 @@ from numpy.typing import NDArray
 import numpy as np
 
 class ReLuActivation(IActivation):
+    name = "relu"
+
     def __init__(self, max_value: float = 6.0) -> None:
         self.max_value = max_value
 

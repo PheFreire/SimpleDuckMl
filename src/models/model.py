@@ -1,11 +1,14 @@
+from serializers.toml_io import load_toml, write_toml
+from typing import Dict, List, Optional, Self, Type
 from datasets.dataset import Dataset
 from layers.i_layer import ILayer
 from numpy.typing import NDArray
 from loss.i_loss import ILoss
 from tqdm import trange
-from typing import List
+from duckdi import Get
 import numpy as np
-
+import uuid
+import os
 
 class Model:
     def __init__(
@@ -75,4 +78,62 @@ class Model:
             if verbose:
                 print(f"[Epoch {epoch + 1}/{epochs}] Loss: {avg_loss:.6f}")
                 print("-=" * 30)
+
+    def save(self, name: Optional[str] = None, path: str = ".", overwrite: bool = True) -> str:
+        name = str(uuid.uuid4()).replace("-", "") if name is None else name
+        model_dir = os.path.join(path, name)
+
+        os.makedirs(model_dir, exist_ok=True)
+        if not os.path.isdir(model_dir):
+            raise NotADirectoryError(f"Error: Could not create model directory '{model_dir}'")
+
+        layer_paths: List[str] = []
+        for i, layer in enumerate(self.layers):
+            layer_name = f"layer_{i:03d}_{layer.name}"
+            layer_path = layer.save(name=layer_name, path=model_dir, overwrite=overwrite)
+            layer_paths.append(layer_path)
+
+            print(f"[ModelSave] Saving {layer.name} → {layer_name}")
+
+        model_toml_path = os.path.join(model_dir, "model.toml")
+        write_toml(
+            obj={
+                "model": {
+                    "learning_rate": self.learning_rate,
+                    "loss": self.loss.name,
+                    "layers": layer_paths,
+                }
+            },
+            path=model_toml_path,
+            overwrite=overwrite,
+        )
+
+        print(f"[ModelSave] Model saved → {model_toml_path}")
+        return model_toml_path
+
+    @classmethod
+    def load(cls, path: str) -> Self:
+        model = os.path.join(path, "model.toml")
+
+        def __process_keys[T](obj: Dict, key: str, expected_type: Type[T]) -> T:
+            data = obj.get(key, None)
+            if data is None or not isinstance(data, expected_type):
+                raise KeyError(f"Error: Could Not Process \"{key}\" key!")
+
+            return data
+
+        model_data = __process_keys(load_toml(model, find_on_path=True), "model", Dict)
+
+        learning_rate = __process_keys(model_data, "learning_rate", float)
+        loss_name = __process_keys(model_data, "loss", str)
+        layer_paths = __process_keys(model_data, "layers", List)
+
+        layers: List[ILayer] = []
+        for l_path in layer_paths:
+            l_type = __process_keys(load_toml(l_path), "layer_type", str)
+            layers.append(Get(ILayer, label='layer', adapter=l_type, instance=False).load(l_path))
+
+        loss = Get(ILoss, label="loss", adapter=loss_name)
+        print(f"[ModelLoad] Loaded {len(layers)} layers, loss={loss_name}, lr={learning_rate}")
+        return cls(layers=layers, loss=loss, learning_rate=learning_rate)
 

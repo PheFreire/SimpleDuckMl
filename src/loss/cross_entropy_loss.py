@@ -3,6 +3,7 @@ from numpy.typing import NDArray
 import numpy as np
 
 class CrossEntropyLoss(ILoss):
+    name = 'cross_entropy'
     def __call__(self, y_pred: NDArray[np.float64], y_true: NDArray[np.float64]) -> float:
         if y_true.shape != y_pred.shape:
             y_true = y_true.reshape(y_pred.shape)
