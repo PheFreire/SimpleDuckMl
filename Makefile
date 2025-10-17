@@ -53,27 +53,5 @@ test: ## run tests
 	echo "🧪 Running tests with \033[36mpytest\033[0m..."
 	poetry run pytest | tee tests.log
 
-##@ Run Code
 
-run: ## run
-	echo "🚀 Starting FastAPI server..."
-	# cd ./src && exec poetry run uvicorn main:app --reload --host=${API_HOST} --port=${API_PORT}
-	cd ./src && exec poetry run python main.py
 
-##@ Docs
-
-doc: ## open api docs
-	echo "🚀 Launching API server and ReDoc docs in separate terminal windows..."
-	gnome-terminal -- bash -c "make run; exec bash"
-	sleep 1
-	poetry run python -m webbrowser "http://${API_HOST}:${API_PORT}/redoc"
-
-##@ Build Container
-
-build: ## Build Docker container
-	echo "🐳 Building Docker image \033[36mfigmify_test\033[0m..."
-	sudo docker build -t figmify_test .
-
-build-run: ## Run built Docker container
-	echo "🐳 Running Docker container on \033[36mhttp://localhost:8000\033[0m..."
-	sudo docker run --rm -p 0.0.0.0:${API_PORT}:${API_PORT} -it figmify_test

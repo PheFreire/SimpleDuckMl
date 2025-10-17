@@ -1,12 +1,14 @@
 [project]
-name = "mlimage"
+name = "simple_duck_ml"
 version = "0.1.0"
-description = ""
-authors = [
-    {name = "Pato",email = "pheprogrammer@gmail.com"}
-]
+description = "🦆 A minimal Ml library for Python"
+authors = [{ name = "Phe Pato", email = "pheprogrammer@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.12"
+
+[project.urls]
+homepage = "https://pypi.org/project/simple_duck_ml/"
+repository = "https://github.com/PheFreire/SimpleDuckMl"
 
 [tool.poetry.dependencies]
 toml = ">=0.10.2,<0.11.0"
@@ -26,14 +28,13 @@ flake8 = ">=7.2.0,<8.0.0"
 autopep8 = ">=2.3.2,<3.0.0"
 pytest = ">=8.3.5,<9.0.0"
 
+[tool.pytest.ini_options]
+pythonpath = ["tests"]
+log_cli = true
+
 [tool.poetry]
 packages = [
-  {include = "activations", from = "src"},
-  {include = "datasets", from = "src"},
-  {include = "layers", from = "src"},
-  {include = "loss", from = "src"},
-  {include = "models", from = "src"},
-  {include = "serializers", from = "src"},
+  {include = "simple_duck_ml", from = "src"},
 ]
 
 
