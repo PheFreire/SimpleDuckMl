@@ -1,7 +1,7 @@
+from typing import Any, Dict, Optional, Self
 from abc import ABC, abstractmethod
 from numpy.typing import NDArray
 from duckdi import Interface
-from typing import Optional, Self
 import numpy as np
 
 @Interface(label='layer')
@@ -24,4 +24,13 @@ class ILayer(ABC):
     def load(cls, path: str) -> Self: ...
 
     @abstractmethod
-    def save(self, name: Optional[str] = None, path: str = ".", overwrite: bool=True) -> str: ...
+    def save(
+        self, 
+        name: Optional[str]=None, 
+        path: str=".", 
+        overwrite: bool=True,
+    ) -> Dict[str, str]: ...
+
+    @property
+    @abstractmethod
+    def info(self) -> Dict[str, Any]: ...

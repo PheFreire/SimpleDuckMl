@@ -1,3 +1,5 @@
+import uuid
+from simple_duck_ml.serializers.create_dir import create_dir
 from simple_duck_ml.serializers.toml_io import load_toml, write_toml
 from simple_duck_ml.dataset_unpacker.dataset import Dataset
 from typing import Dict, List, Optional, Self, Type
@@ -7,7 +9,6 @@ from numpy.typing import NDArray
 from tqdm import trange
 from duckdi import Get
 import numpy as np
-import uuid
 import os
 
 class Model:
@@ -81,21 +82,17 @@ class Model:
 
     def save(self, name: Optional[str] = None, path: str = ".", overwrite: bool = True) -> str:
         name = str(uuid.uuid4()).replace("-", "") if name is None else name
-        model_dir = os.path.join(path, name)
-
-        os.makedirs(model_dir, exist_ok=True)
-        if not os.path.isdir(model_dir):
-            raise NotADirectoryError(f"Error: Could not create model directory '{model_dir}'")
+        dir = create_dir(name, path, overwrite)
 
         layer_paths: List[str] = []
         for i, layer in enumerate(self.layers):
             layer_name = f"layer_{i:03d}_{layer.name}"
-            layer_path = layer.save(name=layer_name, path=model_dir, overwrite=overwrite)
-            layer_paths.append(layer_path)
+            layer_path = layer.save(name=layer_name, path=dir, overwrite=overwrite)
+            layer_paths.append(layer_path['relative'])
 
-            print(f"[ModelSave] Saving {layer.name} → {layer_name}")
+            print(f"[ModelSave] Saving {layer.name} -> {layer_name}")
 
-        model_toml_path = os.path.join(model_dir, "model.toml")
+        model_toml_path = os.path.join(dir, "model.toml")
         write_toml(
             obj={
                 "model": {
@@ -122,14 +119,16 @@ class Model:
 
             return data
 
-        model_data = __process_keys(load_toml(model, find_on_path=True), "model", Dict)
+        model_data = __process_keys(load_toml(model), "model", Dict)
 
         learning_rate = __process_keys(model_data, "learning_rate", float)
         loss_name = __process_keys(model_data, "loss", str)
         layer_paths = __process_keys(model_data, "layers", List)
 
         layers: List[ILayer] = []
-        for l_path in layer_paths:
+        for raw_l_path in layer_paths:
+            l_path = os.path.join(path, raw_l_path)
+            breakpoint()
             l_type = __process_keys(load_toml(l_path), "layer_type", str)
             layers.append(Get(ILayer, label='layer', adapter=l_type, instance=False).load(l_path))
 

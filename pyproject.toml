@@ -1,13 +1,13 @@
 [project]
 name = "simple_duck_ml"
-version = "0.1.0"
+version = "0.1.3"
 description = "🦆 A minimal Ml library for Python"
 authors = [{ name = "Phe Pato", email = "pheprogrammer@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.12"
 
 [project.urls]
-homepage = "https://pypi.org/project/simple_duck_ml/"
+homepage = "https://pypi.org/project/simple_duck_ml"
 repository = "https://github.com/PheFreire/SimpleDuckMl"
 
 [tool.poetry.dependencies]

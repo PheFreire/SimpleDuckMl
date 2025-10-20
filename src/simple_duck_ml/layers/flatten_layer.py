@@ -1,11 +1,10 @@
+from simple_duck_ml.io.toml_layer_writer import TomlLayerWriter
+from simple_duck_ml.io.i_layer_writer import ILayerWriter
+from simple_duck_ml.serializers.toml_io import load_toml
 from simple_duck_ml.layers.i_layer import ILayer
+from typing import Any, Dict, Optional, Self
 from numpy.typing import NDArray
-from typing import Optional, Self
-
-from simple_duck_ml.serializers.toml_io import load_toml, write_toml
 import numpy as np
-import uuid
-import os
 
 
 class FlattenLayer(ILayer):
@@ -59,20 +58,14 @@ class FlattenLayer(ILayer):
     def update(self, learning_rate: float = 0.01, batch_size: int = 1) -> None:
         pass
 
-    def save(self, name: Optional[str] = None, path: str = ".", overwrite: bool=True) -> str:
-        name = str(uuid.uuid4()).replace("-", "") if name is None else name
-        os.mkdir(os.path.join(path, name))
-        file_path = os.path.join(path, name, name)
-
-        return write_toml(
-            obj={ 
-                "layer_type": self.name, 
-                "input_shape": self._input_shape, 
-                "batch_size": self._batch_size,
-            },
-            path=file_path,
-            overwrite=overwrite,
-        )
+    def save(
+        self, 
+        name: Optional[str]=None,
+        path: str=".",
+        overwrite: bool=True,
+    ) -> Dict[str, str]:
+        writer = TomlLayerWriter()
+        return writer(self, name, path, overwrite)
     
     @classmethod
     def load(cls, path: str) -> Self:
@@ -87,3 +80,13 @@ class FlattenLayer(ILayer):
         layer._batch_size = info.get("batch_size", None)
 
         return layer
+
+    @property
+    def info(self) -> Dict[str, Any]:
+        return {
+            "metadata": {
+                "layer_type": self.name, 
+                "input_shape": self._input_shape, 
+                "batch_size": self._batch_size,
+            }
+        }

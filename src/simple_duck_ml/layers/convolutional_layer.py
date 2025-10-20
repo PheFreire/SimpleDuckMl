@@ -1,14 +1,15 @@
-from typing import Dict, Iterable, List, Optional, Self, Type
+from typing import Any, Dict, Iterable, List, Optional, Self, Type
 from simple_duck_ml.activations.i_activation import IActivation
+from simple_duck_ml.io.i_layer_writer import ILayerWriter
+from simple_duck_ml.io.toml_layer_writer import TomlLayerWriter
 from simple_duck_ml.layers.i_layer import ILayer
 from numpy.typing import NDArray
-import numpy as np
-
-from simple_duck_ml.serializers.tensor_io import load_tensor, write_tensor
-from simple_duck_ml.serializers.toml_io import load_toml, write_toml
 from duckdi import Get
-import uuid
+import numpy as np
 import os
+
+from simple_duck_ml.serializers.tensor_io import load_tensor
+from simple_duck_ml.serializers.toml_io import load_toml
 
 class ConvolutionalLayer(ILayer):
     name = "conv"
@@ -159,29 +160,14 @@ class ConvolutionalLayer(ILayer):
 
         self.clean_grad()
 
-    def save(self, name: Optional[str] = None, path: str = ".", overwrite: bool = True) -> str:
-        name = str(uuid.uuid4()).replace("-", "") if name is None else name
-        os.mkdir(os.path.join(path, name))
-        file_path = os.path.join(path, name, name)
-
-        tensors_path = write_tensor(
-            tensors={ "w": self.w, "b": self.b },
-            path=file_path,
-            overwrite=overwrite
-        )
-
-        return write_toml(
-            obj={
-                "layer_type": self.name,
-                "kernel_shape": self.kernel_shape,
-                "activation": self.activation.name,
-                "nodes_num": self.nodes_num,
-                "stride": self.stride,
-                "tensors_path": tensors_path,
-            },
-            path=file_path,
-            overwrite=overwrite,
-        )
+    def save(
+        self, 
+        name: Optional[str]=None,
+        path: str=".",
+        overwrite: bool=True,
+    ) -> Dict[str, str]:
+        writer = TomlLayerWriter()
+        return writer(self, name, path, overwrite)
     
     @classmethod
     def load(cls, path: str) -> Self:
@@ -193,23 +179,44 @@ class ConvolutionalLayer(ILayer):
                 raise KeyError(f"Error: Could Not Process \"{key}\" key!")
 
             return data
-        
-        kernel_shape = __process_keys(layer_info, "kernel_shape", List)
+
         activation = Get(
-            IActivation, 
+            IActivation,
             label='activation',
             adapter=__process_keys(layer_info, "activation", str)
         )
+        kernel_shape = __process_keys(layer_info, "kernel_shape", List)
+        tensors_path = __process_keys(layer_info, "tensors_path", Dict)
         nodes_num = __process_keys(layer_info, "nodes_num", int)
         stride = __process_keys(layer_info, "stride", int)
-        tensors_path = __process_keys(layer_info, "tensors_path", str)
 
-        tensor_info = load_tensor(tensors_path, find_on_path=True)
-        w = __process_keys(tensor_info, "w", np.ndarray)
-        b = __process_keys(tensor_info, "b", np.ndarray)
+        
+        absolute = __process_keys(tensors_path, "absolute", str)
+        relative = __process_keys(tensors_path, "relative", str)
+        path = absolute if os.path.isfile(absolute) else relative 
+        tensor_info = load_tensor(path, find_on_path=True)
+
+        w = __process_keys(tensor_info, "weight", np.ndarray)
+        b = __process_keys(tensor_info, "bias", np.ndarray)
         
         layer = cls(nodes_num, kernel_shape, activation, stride)
 
         layer.w = w
         layer.b = b
         return layer
+    
+    @property
+    def info(self) -> Dict[str, Any]:
+        return {
+            "metadata": {
+                "layer_type": self.name,
+                "kernel_shape": self.kernel_shape,
+                "activation": self.activation.name,
+                "nodes_num": self.nodes_num,
+                "stride": self.stride,
+            },
+            "tensors": {
+                "weight": self.w,
+                "bias": self.b,
+            }
+        }

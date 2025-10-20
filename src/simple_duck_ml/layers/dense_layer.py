@@ -1,14 +1,13 @@
-from numpy.typing import NDArray
-from simple_duck_ml.activations.i_activation import IActivation
 from simple_duck_ml.activations.softmax_activation import SoftmaxActivation
+from simple_duck_ml.activations.i_activation import IActivation
+from simple_duck_ml.io.toml_layer_writer import TomlLayerWriter
+from simple_duck_ml.serializers.tensor_io import load_tensor
+from simple_duck_ml.serializers.toml_io import load_toml
+from typing import Any, Dict, Optional, Self, Type
 from simple_duck_ml.layers.i_layer import ILayer
-from typing import Dict, Optional, Self, Type
-import numpy as np
-
-from simple_duck_ml.serializers.tensor_io import load_tensor, write_tensor
-from simple_duck_ml.serializers.toml_io import load_toml, write_toml
+from numpy.typing import NDArray
 from duckdi import Get
-import uuid
+import numpy as np
 import os
 
 class DenseLayer(ILayer):
@@ -102,31 +101,14 @@ class DenseLayer(ILayer):
         if self._grad_b is not None:
            self._grad_b = np.zeros_like(self.b)
 
-    def save(self, name: Optional[str] = None, path: str = ".", overwrite: bool=True) -> str:
-        if self.w is None or self.b is None:
-            raise RuntimeError("Error: Could Not Instance Dense Layer Weights/Bias") 
-
-        name = str(uuid.uuid4()).replace("-", "") if name is None else name
-        os.mkdir(os.path.join(path, name))
-        file_path = os.path.join(path, name, name)
-
-        tensors_path = write_tensor(
-            tensors={ "w": self.w, "b": self.b },
-            path=file_path,
-            overwrite=overwrite
-        )
-
-        return write_toml(
-            obj={
-                "output_size": self.output_size,
-                "input_size": self.input_size,
-                "activation": self.activation.name,
-                "layer_type": self.name,
-                "tensors_path": tensors_path,
-            },
-            path=file_path,
-            overwrite=overwrite,
-        )
+    def save(
+        self, 
+        name: Optional[str]=None,
+        path: str=".",
+        overwrite: bool=True,
+    ) -> Dict[str, str]:
+        writer = TomlLayerWriter()
+        return writer(self, name, path, overwrite)
     
     @classmethod
     def load(cls, path: str) -> Self:
@@ -146,11 +128,15 @@ class DenseLayer(ILayer):
             adapter=__process_keys(layer_info, "activation", str),
         )
         input_size = __process_keys(layer_info, "input_size", int)
-        tensors_path = __process_keys(layer_info, "tensors_path", str)
+        tensors_path = __process_keys(layer_info, "tensors_path", Dict)
 
-        tensor_info = load_tensor(tensors_path, find_on_path=True)
-        w = __process_keys(tensor_info, "w", np.ndarray)
-        b = __process_keys(tensor_info, "b", np.ndarray)
+        absolute = __process_keys(tensors_path, "absolute", str)
+        relative = __process_keys(tensors_path, "relative", str)
+        path = absolute if os.path.isfile(absolute) else relative 
+        tensor_info = load_tensor(path, find_on_path=True)
+
+        w = __process_keys(tensor_info, "weight", np.ndarray)
+        b = __process_keys(tensor_info, "bias", np.ndarray)
         
         layer = cls(output_size, activation)
         
@@ -159,3 +145,19 @@ class DenseLayer(ILayer):
         layer.b = b
 
         return layer
+    
+    @property
+    def info(self) -> Dict[str, Any]:
+        return {
+            "metadata": {
+                "output_size": self.output_size,
+                "input_size": self.input_size,
+                "activation": self.activation.name,
+                "layer_type": self.name,
+            },
+            "tensors": {
+                "weight": self.w,
+                "bias": self.b,
+            }
+        }
+

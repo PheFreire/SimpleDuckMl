@@ -53,5 +53,11 @@ test: ## run tests
 	echo "🧪 Running tests with \033[36mpytest\033[0m..."
 	poetry run pytest | tee tests.log
 
+##@ Publish
 
-
+pub: ## 🔼 Bump patch version, build, and publish the package to PyPI using Poetry
+	echo "\033[34m🚀 Publishing package:\033[0m bumping version, building and uploading to PyPI..."
+	poetry install
+	poetry version patch
+	poetry build
+	poetry publish --no-interaction
