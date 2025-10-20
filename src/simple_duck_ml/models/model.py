@@ -128,7 +128,6 @@ class Model:
         layers: List[ILayer] = []
         for raw_l_path in layer_paths:
             l_path = os.path.join(path, raw_l_path)
-            breakpoint()
             l_type = __process_keys(load_toml(l_path), "layer_type", str)
             layers.append(Get(ILayer, label='layer', adapter=l_type, instance=False).load(l_path))
 
