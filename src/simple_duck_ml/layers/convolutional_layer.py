@@ -196,8 +196,8 @@ class ConvolutionalLayer(ILayer):
         path = absolute if os.path.isfile(absolute) else relative 
         tensor_info = load_tensor(path, find_on_path=True)
 
-        w = __process_keys(tensor_info, "weight", np.ndarray)
-        b = __process_keys(tensor_info, "bias", np.ndarray)
+        w = __process_keys(tensor_info, "w", np.ndarray)
+        b = __process_keys(tensor_info, "b", np.ndarray)
         
         layer = cls(nodes_num, kernel_shape, activation, stride)
 
@@ -216,7 +216,7 @@ class ConvolutionalLayer(ILayer):
                 "stride": self.stride,
             },
             "tensors": {
-                "weight": self.w,
-                "bias": self.b,
+                "w": self.w,
+                "b": self.b,
             }
         }
