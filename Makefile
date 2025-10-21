@@ -55,9 +55,11 @@ test: ## run tests
 
 ##@ Publish
 
-pub: ## 🔼 Bump patch version, build, and publish the package to PyPI using Poetry
+pub: ## build and publish the package to PyPI using Poetry
 	echo "\033[34m🚀 Publishing package:\033[0m bumping version, building and uploading to PyPI..."
-	poetry install
+	@if [ -d "dist" ]; then rm -rf dist; fi
 	poetry version patch
+	poetry install
 	poetry build
 	poetry publish --no-interaction
+
