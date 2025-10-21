@@ -1,6 +1,5 @@
 from typing import Any, Dict, Iterable, List, Optional, Self, Type
 from simple_duck_ml.activations.i_activation import IActivation
-from simple_duck_ml.io.i_layer_writer import ILayerWriter
 from simple_duck_ml.io.toml_layer_writer import TomlLayerWriter
 from simple_duck_ml.layers.i_layer import ILayer
 from numpy.typing import NDArray
@@ -192,7 +191,10 @@ class ConvolutionalLayer(ILayer):
 
         
         absolute = __process_keys(tensors_path, "absolute", str)
-        relative = __process_keys(tensors_path, "relative", str)
+        relative = os.path.join(
+            os.path.dirname(path),
+            __process_keys(tensors_path, "relative", str)
+        )
         path = absolute if os.path.isfile(absolute) else relative 
         tensor_info = load_tensor(path, find_on_path=True)
 

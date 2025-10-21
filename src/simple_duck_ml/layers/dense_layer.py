@@ -131,8 +131,12 @@ class DenseLayer(ILayer):
         tensors_path = __process_keys(layer_info, "tensors_path", Dict)
 
         absolute = __process_keys(tensors_path, "absolute", str)
-        relative = __process_keys(tensors_path, "relative", str)
-        path = absolute if os.path.isfile(absolute) else relative 
+        relative = os.path.join(
+            os.path.dirname(path),
+            __process_keys(tensors_path, "relative", str)
+        )
+
+        path = absolute if os.path.isfile(absolute) else relative
         tensor_info = load_tensor(path, find_on_path=True)
 
         w = __process_keys(tensor_info, "w", np.ndarray)

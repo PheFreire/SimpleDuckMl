@@ -1,6 +1,6 @@
 [project]
 name = "simple_duck_ml"
-version = "0.1.4"
+version = "0.1.7"
 description = "🦆 A minimal Ml library for Python"
 authors = [{ name = "Phe Pato", email = "pheprogrammer@gmail.com" }]
 readme = "README.md"
