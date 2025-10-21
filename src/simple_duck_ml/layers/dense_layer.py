@@ -132,8 +132,8 @@ class DenseLayer(ILayer):
 
         absolute = __process_keys(tensors_path, "absolute", str)
         relative = os.path.join(
-            os.path.dirname(path),
-            __process_keys(tensors_path, "relative", str)
+            os.path.dirname(path) if os.path.isfile(path) else path,
+            os.path.dirname(__process_keys(tensors_path, "relative", str))
         )
 
         path = absolute if os.path.isfile(absolute) else relative
