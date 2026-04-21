@@ -2,7 +2,7 @@ import uuid
 from simple_duck_ml.serializers.create_dir import create_dir
 from simple_duck_ml.serializers.toml_io import load_toml, write_toml
 from simple_duck_ml.dataset_unpacker.i_data_source import IDataSource
-from typing import Dict, List, Optional, Self, Type
+from typing import Dict, List, Optional, Self, Sequence, Type
 from simple_duck_ml.layers.i_layer import ILayer
 from simple_duck_ml.loss.i_loss import ILoss
 from numpy.typing import NDArray
@@ -43,7 +43,7 @@ class Model:
 
     def fit(
         self,
-        sources: List[IDataSource],
+        sources: Sequence[IDataSource],
         epochs: int = 5,
         batch_size: int = 10,
         shuffle: bool = True,
