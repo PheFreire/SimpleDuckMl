@@ -228,7 +228,7 @@ O **stride** controla quantas posições o kernel avança a cada passo.
 O tamanho do mapa de ativação resultante é:
 
 $$
-\text{output\_h} = \frac{H_{entrada} - H_{kernel}}{\text{stride}} + 1
+\text{output\\_h} = \frac{H_{\text{entrada}} - H_{\text{kernel}}}{\text{stride}} + 1
 $$
 
 **No framework:** Calculado em [`convolutional_layer.py:55-56`](src/simple_duck_ml/layers/convolutional_layer.py):
@@ -446,9 +446,9 @@ for idx, (i, j) in enumerate(np.ndindex(output_h, output_w)):
 Após processar o batch inteiro, os pesos são atualizados com o gradiente médio acumulado:
 
 $$
-W \mathrel{-}= \eta \cdot \frac{\nabla W}{\text{batch\_size}}
+W \mathrel{-}= \eta \cdot \frac{\nabla W}{\text{batch\\_size}}
 \qquad
-b \mathrel{-}= \eta \cdot \frac{\nabla b}{\text{batch\_size}}
+b \mathrel{-}= \eta \cdot \frac{\nabla b}{\text{batch\\_size}}
 $$
 
 **No framework:** `layer.update()` chamado em [`model.py:36-38`](src/simple_duck_ml/models/model.py) após cada mini-batch. Cada layer limpa seus gradientes acumulados ao final do `update()` via `clean_grad()`.
@@ -509,3 +509,4 @@ for cada epoch:
 | `InMemoryDataSource(dataset)` | Dataset pequeno já carregado |
 | `StreamingDataSource(unpacker, label, normalization)` | Dataset grande, leitura do disco |
 | `IDataSource` | Interface para fontes customizadas |
+
