@@ -10,5 +10,5 @@ class MSELoss(ILoss):
 
     def derivative(self, y_pred: NDArray[np.float32], y_true: NDArray[np.float32]) -> NDArray[np.float32]:
         y_true = y_true.reshape(y_pred.shape)
-        return 2 * (y_pred - y_true) / y_true.size
+        return (np.float32(2) * (y_pred - y_true) / np.float32(y_true.size))
     
