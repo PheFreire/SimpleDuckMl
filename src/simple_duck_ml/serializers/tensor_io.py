@@ -3,7 +3,7 @@ from typing import Dict
 import numpy as np
 import os
 
-def write_tensor(tensors: Dict[str, NDArray[np.float64]], path: str, overwrite: bool=True) -> str:
+def write_tensor(tensors: Dict[str, NDArray[np.float32]], path: str, overwrite: bool=True) -> str:
     path = path if path.endswith(".npz") else f"{path}.npz"
     if os.path.isfile(path) and not overwrite:
         raise FileExistsError(f"Error: \"{path}\" already exists\nSet \"overwrite=True\" to overwrite file!")
@@ -12,7 +12,7 @@ def write_tensor(tensors: Dict[str, NDArray[np.float64]], path: str, overwrite: 
     return path
 
     
-def load_tensor(path: str, find_on_path: bool) -> Dict[str, NDArray[np.float64]]:
+def load_tensor(path: str, find_on_path: bool) -> Dict[str, NDArray[np.float32]]:
     if find_on_path and not path.endswith(".npz") and os.path.isdir(path):
         files = [file for file in os.listdir(path) if file.endswith(".npz")]
         if files:

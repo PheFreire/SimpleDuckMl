@@ -14,7 +14,7 @@ class FlattenLayer(ILayer):
         self._input_shape: tuple[int, ...] | None = None
         self._batch_size: int | None = None
 
-    def forward(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def forward(self, x: NDArray[np.float32]) -> NDArray[np.float32]:
         """
         Receive (C, H, W, N) or (H, W, C) or (C, H, W) and flat into (features, N)
         """
@@ -42,7 +42,7 @@ class FlattenLayer(ILayer):
         return flat
 
 
-    def backward(self, delta: NDArray[np.float64]) -> NDArray[np.float64]:
+    def backward(self, delta: NDArray[np.float32]) -> NDArray[np.float32]:
         if self._input_shape is None:
             raise RuntimeError("Forward deve ser chamado antes do Backward")
 

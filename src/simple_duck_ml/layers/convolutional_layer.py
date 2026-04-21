@@ -24,20 +24,20 @@ class ConvolutionalLayer(ILayer):
         self.kernel_shape = list(kernel_shape)
 
         limit = np.sqrt(2.0 / np.prod(self.kernel_shape))
-        self.w = np.random.randn(nodes_num, *self.kernel_shape) * limit
-        self.b = np.zeros((nodes_num, 1))
+        self.w = (np.random.randn(nodes_num, *self.kernel_shape) * limit).astype(np.float32)
+        self.b = np.zeros((nodes_num, 1), dtype=np.float32)
 
-        self._grad_w: NDArray[np.float64] = np.zeros_like(self.w)
-        self._grad_b: NDArray[np.float64] = np.zeros_like(self.b)
+        self._grad_w: NDArray[np.float32] = np.zeros_like(self.w)
+        self._grad_b: NDArray[np.float32] = np.zeros_like(self.b)
 
         self.stride = stride
         self.activation = activation
 
-        self._patches: Optional[NDArray[np.float64]] = None
-        self._x: Optional[NDArray[np.float64]] = None
-        self._output: Optional[NDArray[np.float64]] = None
+        self._patches: Optional[NDArray[np.float32]] = None
+        self._x: Optional[NDArray[np.float32]] = None
+        self._output: Optional[NDArray[np.float32]] = None
     
-    def __get_patches(self, x: NDArray[np.float64], stride: int=1) -> NDArray[np.float64]:
+    def __get_patches(self, x: NDArray[np.float32], stride: int=1) -> NDArray[np.float32]:
         # Expand shape to support data (only support 3D channels :/) 
         if x.ndim == 2:
             x = np.expand_dims(x, axis=-1)
@@ -56,7 +56,7 @@ class ConvolutionalLayer(ILayer):
         output_w = (input_w - kernel_w) // stride + 1
 
         # Allocate array for patches
-        patches = np.zeros((output_h, output_w, kernel_h, kernel_w, in_channels))
+        patches = np.zeros((output_h, output_w, kernel_h, kernel_w, in_channels), dtype=np.float32)
 
         # Extract each patch (manual sliding window)
         for i, j in np.ndindex(output_h, output_w):
@@ -66,7 +66,7 @@ class ConvolutionalLayer(ILayer):
 
         return patches
             
-    def forward(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def forward(self, x: NDArray[np.float32]) -> NDArray[np.float32]:
         if x.ndim == 2:
             x = np.expand_dims(x, axis=-1)
 
@@ -97,7 +97,7 @@ class ConvolutionalLayer(ILayer):
         # Move the channel dimension from its current index ("0") to the last position ("-1")
         return np.moveaxis(self._output, 0, -1)
 
-    def backward(self, delta: NDArray[np.float64]) -> NDArray[np.float64]:
+    def backward(self, delta: NDArray[np.float32]) -> NDArray[np.float32]:
         if self._output is None or self._patches is None:
             raise RuntimeError("Forward should be called before Backward")
 

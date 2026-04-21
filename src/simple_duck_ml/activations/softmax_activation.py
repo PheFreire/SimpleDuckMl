@@ -5,14 +5,14 @@ import numpy as np
 class SoftmaxActivation(IActivation):
     name = "softmax"
 
-    def __call__(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def __call__(self, x: NDArray[np.float32]) -> NDArray[np.float32]:
         x_shifted = x - np.max(x, axis=0, keepdims=True)
         exp_x = np.exp(x_shifted)
         sum_exp = np.sum(exp_x, axis=0, keepdims=True)
 
         return exp_x / np.clip(sum_exp, 1e-12, np.inf)
 
-    def derivative(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def derivative(self, x: NDArray[np.float32]) -> NDArray[np.float32]:
         """
         Retorna o gradiente (jacobiano) do softmax.
         s deve ser o vetor já ativado (saída do softmax).

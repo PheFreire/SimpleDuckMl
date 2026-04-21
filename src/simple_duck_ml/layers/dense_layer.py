@@ -18,27 +18,27 @@ class DenseLayer(ILayer):
         self.activation = activation
 
         self.input_size: Optional[int] = None
-        self.w: Optional[NDArray[np.float64]] = None
-        self.b: Optional[NDArray[np.float64]] = None
-        self._x: Optional[NDArray[np.float64]] = None
-        self._z: Optional[NDArray[np.float64]] = None
-        self._output: Optional[NDArray[np.float64]] = None
+        self.w: Optional[NDArray[np.float32]] = None
+        self.b: Optional[NDArray[np.float32]] = None
+        self._x: Optional[NDArray[np.float32]] = None
+        self._z: Optional[NDArray[np.float32]] = None
+        self._output: Optional[NDArray[np.float32]] = None
 
-        self._grad_w: Optional[NDArray[np.float64]] = None
-        self._grad_b: Optional[NDArray[np.float64]] = None
+        self._grad_w: Optional[NDArray[np.float32]] = None
+        self._grad_b: Optional[NDArray[np.float32]] = None
 
 
     def _init_params(self, input_size: int) -> None:
         self.input_size = input_size
 
         limit = np.sqrt(2.0 / self.input_size)
-        self.w = np.random.randn(self.output_size, self.input_size) * limit
-        self.b = np.zeros((self.output_size, 1))
+        self.w = (np.random.randn(self.output_size, self.input_size) * limit).astype(np.float32)
+        self.b = np.zeros((self.output_size, 1), dtype=np.float32)
         self._grad_w = np.zeros_like(self.w)
         self._grad_b = np.zeros_like(self.b)
 
 
-    def forward(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def forward(self, x: NDArray[np.float32]) -> NDArray[np.float32]:
         if x.ndim == 1:
             x = x.reshape(-1, 1)
 
@@ -57,7 +57,7 @@ class DenseLayer(ILayer):
         return self._output
 
 
-    def backward(self, delta: NDArray[np.float64]) -> NDArray[np.float64]:
+    def backward(self, delta: NDArray[np.float32]) -> NDArray[np.float32]:
         if self._output is None or self._x is None or self._z is None:
             raise RuntimeError("Forward should be called before Backward")
 
@@ -99,7 +99,8 @@ class DenseLayer(ILayer):
             self._grad_w.fill(0)
 
         if self._grad_b is not None:
-           self._grad_b = np.zeros_like(self.b)
+            self._grad_b.fill(0)
+            self._grad_b = np.zeros_like(self.b)
 
     def save(
         self, 

@@ -8,9 +8,9 @@ class ReLuActivation(IActivation):
     def __init__(self, max_value: float = 6.0) -> None:
         self.max_value = max_value
 
-    def __call__(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def __call__(self, x: NDArray[np.float32]) -> NDArray[np.float32]:
         return np.clip(np.maximum(0, x), 0, self.max_value)
 
-    def derivative(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
-        return (x > 0).astype(np.float64)
+    def derivative(self, x: NDArray[np.float32]) -> NDArray[np.float32]:
+        return (x > 0).astype(np.float32)
 

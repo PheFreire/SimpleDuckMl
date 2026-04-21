@@ -5,7 +5,7 @@ import numpy as np
 class CrossEntropyLoss(ILoss):
     name = 'cross_entropy'
 
-    def __call__(self, y_pred: NDArray[np.float64], y_true: NDArray[np.float64]) -> float:
+    def __call__(self, y_pred: NDArray[np.float32], y_true: NDArray[np.float32]) -> float:
         if y_true.shape != y_pred.shape:
             y_true = y_true.reshape(y_pred.shape)
 
@@ -14,6 +14,6 @@ class CrossEntropyLoss(ILoss):
 
         return -np.mean(np.sum(y_true * np.log(y_pred), axis=-1))
 
-    def derivative(self, y_pred: NDArray[np.float64], y_true: NDArray[np.float64]) -> NDArray[np.float64]:
+    def derivative(self, y_pred: NDArray[np.float32], y_true: NDArray[np.float32]) -> NDArray[np.float32]:
         return y_pred - y_true
 
