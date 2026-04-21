@@ -165,3 +165,4 @@ pyrightconfig.json
 
 # Project ignores
 .DS_Store
+.claude/
