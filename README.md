@@ -164,11 +164,11 @@ Para cada coordenada $(i, j)$ da layer inicial existe um vetor chamado **channel
 - Para **vídeo**: channel = `[R, G, B, T]` onde $T$ é o instante de tempo.
 
 $$
-X_{kij} = \left\{
+X_{kij} = \left\lbrace
 \begin{bmatrix} x_{111} & \cdots & x_{11j} \\ \vdots & \ddots & \vdots \\ x_{1i1} & \cdots & x_{1ij} \end{bmatrix},\;
 \begin{bmatrix} x_{211} & \cdots & x_{21j} \\ \vdots & \ddots & \vdots \\ x_{2i1} & \cdots & x_{2ij} \end{bmatrix},\;
 \begin{bmatrix} x_{311} & \cdots & x_{31j} \\ \vdots & \ddots & \vdots \\ x_{3i1} & \cdots & x_{3ij} \end{bmatrix}
-\right\}
+\right\rbrace
 $$
 
 **No framework:** `ConvolutionalLayer.forward()` aceita tensores `(H, W, C)`. Quando a entrada é 2D (escala de cinza), o canal é adicionado automaticamente — veja [`convolutional_layer.py:70-71`](src/simple_duck_ml/layers/convolutional_layer.py).
@@ -249,7 +249,7 @@ z_{ij} = \sum_k \sum_{p}\sum_{q} x_{k,i+p,\, j+q} \cdot w_{k,p,q} + b
 $$
 
 $$
-\text{ativaçãoMap}_{ij} = \text{ReLU}(z_{ij})
+\text{activationMap}_{ij} = \text{ReLU}(z_{ij})
 $$
 
 O agrupamento de todos esses escalares numa matriz 2D é o **mapa de ativação**. Cada perceptron (nó) da layer convolucional produz um mapa de ativação independente.
