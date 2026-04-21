@@ -1,7 +1,7 @@
 import uuid
 from simple_duck_ml.serializers.create_dir import create_dir
 from simple_duck_ml.serializers.toml_io import load_toml, write_toml
-from simple_duck_ml.dataset_unpacker.dataset import Dataset
+from simple_duck_ml.dataset_unpacker.i_data_source import IDataSource
 from typing import Dict, List, Optional, Self, Type
 from simple_duck_ml.layers.i_layer import ILayer
 from simple_duck_ml.loss.i_loss import ILoss
@@ -22,12 +22,12 @@ class Model:
         self.loss = loss
         self.learning_rate = learning_rate
 
-    def forward(self, x: NDArray[np.float64]) -> NDArray[np.float64]:
+    def forward(self, x: NDArray[np.float32]) -> NDArray[np.float32]:
         for layer in self.layers:
             x = layer.forward(x)
         return x
 
-    def backward(self, y_pred: NDArray[np.float64], y_true: NDArray[np.float64]) -> None:
+    def backward(self, y_pred: NDArray[np.float32], y_true: NDArray[np.float32]) -> None:
         delta = self.loss.derivative(y_pred, y_true)
         for layer in reversed(self.layers):
             delta = layer.backward(delta)
@@ -36,43 +36,74 @@ class Model:
         for layer in self.layers:
             layer.update(self.learning_rate, batch_size)
 
-    def _one_hot(self, label: int, num_classes: int) -> NDArray[np.float64]:
-        one_hot = np.zeros((num_classes, 1), dtype=np.float64)
+    def _one_hot(self, label: int, num_classes: int) -> NDArray[np.float32]:
+        one_hot = np.zeros((num_classes, 1), dtype=np.float32)
         one_hot[label, 0] = 1.0
         return one_hot
 
     def fit(
         self,
-        datasets: List[Dataset],
+        sources: List[IDataSource],
         epochs: int = 5,
         batch_size: int = 10,
         shuffle: bool = True,
-        verbose: bool = True
+        verbose: bool = True,
     ) -> None:
-        num_classes = len(datasets)
-        samples = [(img, d.y) for d in datasets for img in d.x]
-        total_samples = len(samples)
+        # Cada source representa uma classe de treinamento
+        # O indice da source é o valor numerico referente ao label
+        num_classes = len(sources)
+
+        # Monta um indice global leve: (source_idx, sample_idx)
+        # Apenas dois inteiros por amostra (nenhuma imagem é carregada aqui)
+        all_indices = np.array(
+            [
+                (s_idx, i) for s_idx, source in enumerate(sources) 
+                for i in range(len(source))
+            ],
+            dtype=np.int64,
+        )
+        total_samples = len(all_indices)
 
         for epoch in trange(epochs, desc="Epoch"):
+            # Embaralha os indices para que cada epoch veja as amostras em ordem diferente,
+            # evitando que o modelo aprenda a ordem dos dados ao invés dos padrões
             if shuffle:
-                np.random.shuffle(samples)
+                np.random.shuffle(all_indices)
 
             total_loss = 0.0
 
-            # Mini batch loop
+            # Divide os indices em fatias de tamanho batch_size
             for batch_start in range(0, total_samples, batch_size):
-                batch = samples[batch_start:batch_start + batch_size]
+                batch = all_indices[batch_start:batch_start + batch_size]
                 batch_loss = 0.0
+                actual_batch_size = 0  # conta amostras validas (descarta leituras corrompidas)
 
-                for x, label in batch:
-                    y_true = self._one_hot(label, num_classes)
-                    y_pred = self.forward(x)
+                for s_idx, i in batch:
+                    # Carrega a imagem do disco ou memoria conforme o tipo de IDataSource
+                    sample = sources[s_idx].get_sample(int(i))
+                    if sample is None:
+                        continue
 
+                    # Converte o label inteiro para vetor one-hot: ex. classe 2 de 3 → [0, 0, 1]
+                    y_true = self._one_hot(sample.y, num_classes)
+
+                    # Forward: propaga a imagem por todas as layers e retorna as probabilidades
+                    y_pred = self.forward(sample.x)
+
+                    # Calcula o erro entre a predição e o valor esperado
                     loss = self.loss(y_pred, y_true)
                     batch_loss += float(loss)
-                    self.backward(y_pred, y_true)
 
-                self.update(batch_size)
+                    # Backward: calcula o gradiente do erro em relação a cada peso da rede
+                    # Os gradientes são acumulados em cada layer (∇W += ...) sem atualizar ainda
+                    self.backward(y_pred, y_true)
+                    actual_batch_size += 1
+
+                # Atualiza os pesos uma única vez com a média dos gradientes acumulados no batch
+                # W -= learning_rate * (∇W / actual_batch_size)
+                if actual_batch_size > 0:
+                    self.update(actual_batch_size)
+
                 total_loss += batch_loss
 
             avg_loss = total_loss / total_samples
