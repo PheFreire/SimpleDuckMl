@@ -13,13 +13,16 @@ class StreamingDataSource(IDataSource):
         unpacker: MiniBatchBinDatasetUnpacker,
         label: int,
         normalization: Optional[Callable[[NDArray], NDArray]] = None,
+        limit: Optional[int] = None,
     ) -> None:
         self._unpacker = unpacker
         self._label = label
         self._normalization = normalization
+        self._limit = limit
 
     def __len__(self) -> int:
-        return len(self._unpacker)
+        total = len(self._unpacker)
+        return min(total, self._limit) if self._limit is not None else total
 
     def get_sample(self, idx: int) -> Optional[Dataset]:
         return self._unpacker.read_sample(idx, self._label, self._normalization)
