@@ -62,4 +62,11 @@ pub: ## build and publish the package to PyPI using Poetry
 	poetry install
 	poetry build
 	poetry publish --no-interaction
+	@VERSION=$$(poetry version -s); \
+	git add pyproject.toml; \
+	git commit -m "Bump version to $$VERSION"; \
+	git tag "v$$VERSION"; \
+	git push; \
+	git push --tags; \
+	echo "\033[32m✅ Tagged and pushed v$$VERSION\033[0m"
 
